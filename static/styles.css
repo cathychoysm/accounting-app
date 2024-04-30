@@ -1,0 +1,105 @@
+* {
+    font-family: Verdana, sans-serif;
+}
+
+body {
+    background-color: #DAE7F5;
+}
+
+.my-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 5px 5px 5px #C0C0C0;
+    padding: 20px 5px;
+    @media only scree and (min-width: 600px) {
+        padding: 20px;
+    }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 35px;
+}
+
+.balance-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 2px 2px 5px #C0C0C0;
+    width: 30%;
+    max-width: 180px;
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: center;
+}
+
+.login-form {
+    min-height: 350px;
+    width: calc(100vw * 0.95);
+    max-width: 650px;
+    gap: 15px;
+}
+
+.login-form > div {
+    width: 95%;
+    @media only screen and (min-width: 600px) {
+        width: 75%;
+    }
+}
+
+.btn:first-child:active {
+    border-color: transparent;
+}
+
+.overview {
+    height: 120%;
+    width: calc(100vw * 0.95);
+    max-width: 800px;
+}
+
+.data-display-card {
+    min-height: 300px;
+    width: calc(100vw * 0.95);
+    max-width: 800px;
+}
+
+.transaction-card {
+    border-radius: 10px;
+    box-shadow: 0 0 5px #B4B4B4;
+    height: 80px;
+    padding: 10px 15px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+        "category amount buttons"
+        "description amount buttons";
+    justify-items: start;
+    align-items: center;
+
+    @media only scree and (min-width: 600px) {
+        height: 100px;
+        padding: 20px 30px;
+    }
+}
+
+.font-title-amount {
+    font-size: 12px;
+    @media only screen and (min-width: 600px) {
+        font-size: 18px;
+    }
+}
+
+.font-balance-amount {
+    font-size: 14px;
+    @media only screen and (min-width: 600px) {
+        font-size: 22px;
+    }
+}
+
+.font-list-amount {
+    font-size: 16px;
+    @media only screen and (min-width: 600px) {
+        font-size: 20px;
+    }
+}

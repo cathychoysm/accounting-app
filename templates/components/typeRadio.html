@@ -1,0 +1,30 @@
+<div class="form-check p-0">
+    <input
+        class="btn-check"
+        type="radio"
+        id="{{ id.expense }}"
+        name="type"
+        value="expense"
+        {% if onclickTargetId %}
+            onclick="typeChangeCategories(this, '{{onclickTargetId}}')"
+        {% endif %}
+        {{"checked" if type == "expense" else ""}}>
+    <label class="btn btn-outline-danger" for="{{ id.expense }}">
+        Expense
+    </label>
+</div>
+<div class="form-check p-0">
+    <input
+        class="btn-check"
+        type="radio"
+        id="{{ id.income }}"
+        name="type"
+        value="income"
+        {% if onclickTargetId %}
+            onclick="typeChangeCategories(this, '{{onclickTargetId}}')"
+        {% endif %}
+        {{"checked" if type == "income" else ""}}>
+    <label class="btn btn-outline-success" for="{{ id.income }}">
+        Income
+    </label>
+</div>

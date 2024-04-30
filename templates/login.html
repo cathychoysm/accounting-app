@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+    <div class="d-flex flex-column justify-content-center align-items-center gap-3">
+        {% with action="/login", title="Log in", error=error, username=username, password=password %}
+            {% include "/components/loginRegForm.html" %}
+        {% endwith %}
+        <form action="/register">
+            <span>Do not have an account yet?</span>
+            <a href="/register">Register here</a>
+        </form>
+    </div>
+{% endblock %}

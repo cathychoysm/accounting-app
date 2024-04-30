@@ -1,0 +1,179 @@
+{% extends "overview.html" %}
+
+{% block title %}
+    Transactions
+{% endblock %}
+
+
+{% block tab %}
+    <div class="my-card data-display-card">
+        {% if months %}
+            <form action="/" method="post" class="d-flex flex-column align-items-center gap-3 w-75">
+                <div class="d-flex flex-row gap-4 align-items-center justify-content-center">
+                    {% with id={"expense": "type-expense", "income": "type-income"}, type=type %}
+                        {% include '/components/typeRadio.html' %}
+                    {% endwith %}
+                </div>
+                <select class="form-select text-center" id="monthSelect" name="month">
+                    {% for month in months %}
+                        {% if month == selected_month %}
+                            <option value="{{ month }}" selected>{{ month }}</option>
+                        {% else %}
+                            <option value="{{ month }}">{{ month }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </form>
+            <div class="d-flex flex-column gap-4 p-3 w-100" style="min-height: 200px;">
+                {% if grouped_transactions %}
+                    {% for date, transactions in grouped_transactions.items() %}
+                        <div class="d-flex flex-column align-items-start gap-3 w-100">
+                            <div class="fw-bold">{{ date }}</div>
+                            {% for transaction in transactions %}
+                                <div class="transaction-card w-100">
+                                    <div
+                                        class="fw-bold"
+                                        style="grid-area: category; width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;">
+                                        {{ transaction.category }}
+                                    </div>
+                                    <div style="grid-area: description; width: 95%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;">
+                                        {{ transaction.description }}
+                                    </div>
+                                    <div class="font-list-amount" style="grid-area: amount;">{{ transaction.amount }}</div>
+                                    <div class="d-flex flex-row gap-3" style="grid-area: buttons; justify-self: end;">
+                                        <button
+                                            class="btn btn-outline-secondary"
+                                            value="{{ transaction.id }}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editTransactionModal"
+                                            onclick='showEditModal({{ transaction|tojson }})'>
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick='showDeleteModal({{ transaction|tojson }})'><i class="fa-regular fa-trash-can"></i></button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                        <h4>Add a transaction to start!</h4>
+                {% endif %}
+            </div>
+
+            <!-- Edit transaction modal -->
+            {% with modalId="editTransactionModal", title="Edit transaction", formId="edittransaction", formItemsId="editTransFormItems", today=today, type=type, categories=categories, categorySelectListId="categorySelectListEdit", formSumbitId="editFormSubmit", submitOnclick="submitEditTrans(event, this)" %}
+                {% include '/components/transactionFormModal.html' %}
+            {% endwith %}
+
+            <!-- Confirm delete modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5 fw-bold">Delete Transaction</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-start">Are you sure you want to delete this transaction?</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" id="deleteFormSubmit" onclick="deleteTransaction(this)" class="btn btn-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <h4>Add a transaction to start!</h4>
+        {% endif %}
+    </div>
+
+
+    <script>
+        // everytime the value of type or month changed, the form will be submitted
+        const typeIncomeSelect = document.getElementById("type-income");
+        const typeExpenseSelect = document.getElementById("type-expense");
+        const monthSelect = document.getElementById("monthSelect");
+
+        if (typeIncomeSelect && typeExpenseSelect && monthSelect) {
+            typeIncomeSelect.addEventListener('change', function() {
+                this.form.submit();
+            });
+            typeExpenseSelect.addEventListener('change', function() {
+                this.form.submit();
+            });
+            monthSelect.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+
+        function showEditModal(transaction) {
+            const form = document.getElementById("edittransaction");
+
+            form.elements["date"].value = transaction.date;
+            form.elements["type"].value = transaction.type;
+            form.elements["description"].value = transaction.description;
+            form.elements["amount"].value = Number(transaction.amount.substring(1));
+            Array.from(form.elements["category"].options).forEach(option => {
+                if (option.value === transaction.category) {
+                    option.selected = true;
+                }
+            });
+            const editFormSubmit = document.getElementById("editFormSubmit");
+            editFormSubmit.value = transaction.id;
+        }
+
+        async function submitEditTrans(event, element) {
+            event.preventDefault();
+
+            const formData = new FormData(document.getElementById("edittransaction"));
+            formData.append("id", element.value);
+
+            let errorMsg = null;
+
+            try {
+                const response = await fetch("/edittransaction", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    errorMsg = error.message;
+                }
+            } catch (err) {
+                errorMsg = `Server Error: ${err.message}`;
+            }
+
+            if (errorMsg) {
+                addTransFormItems = document.getElementById("editTransFormItems")
+                errorMsgDiv = document.createElement("div")
+                errorMsgDiv.className = "rounded bg-danger-subtle text-danger-emphasis text-start"
+                errorMsgDiv.style.padding = "5px"
+                errorMsgDiv.innerHTML = errorMsg
+                addTransFormItems.insertBefore(errorMsgDiv, addTransFormItems.firstChild)
+            }
+        }
+
+        function showDeleteModal(transaction) {
+            const deleteFormSubmit = document.getElementById("deleteFormSubmit");
+            deleteFormSubmit.value = transaction.id;
+        }
+
+        async function deleteTransaction(element) {
+            const formData = new FormData();
+            formData.append("id", element.value)
+
+            const response = await fetch("/deletetransaction", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                location.reload();
+            }
+        }
+
+    </script>
+{% endblock %}

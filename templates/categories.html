@@ -1,0 +1,165 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Categories
+{% endblock %}
+
+{% block main %}
+    <div class="d-flex flex-column align-items-center">
+        <div class="my-card data-display-card p-4">
+            <h3 class="fw-bold">Categories</h3>
+            <form action="/categories" method="post" class="d-flex flex-column align-items-center gap-3 w-75">
+                <div class="d-flex flex-row gap-4 align-items-center justify-content-center">
+                    {% with id={"expense": "type-expense", "income": "type-income"}, type=type %}
+                        {% include '/components/typeRadio.html' %}
+                    {% endwith %}
+                </div>
+            </form>
+            <div class="d-flex flex-column align-items-center w-100 gap-4" style="min-height: 200px;">
+                {% for category in categories %}
+                    <div class="d-flex flex-row justify-content-between align-items-center w-75 p-4 border rounded-3">
+                        <div style="width: 75%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;">{{ category.name }}</div>
+                        <div class="d-flex flex-row align-items-center gap-3">
+                            <button
+                                class="btn btn-outline-secondary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editCategoryModal"
+                                onclick='showEditModal({{ category | tojson }})'>
+                                    <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick='showDeleteModal({{ category | tojson }})'><i class="fa-regular fa-trash-can"></i></button>
+                        </div>
+                    </div>
+
+                    {% endfor %}
+                                </div>
+        </div>
+    </div>
+
+    <!-- Edit catgory modal -->
+    <div class="modal fade" id="editCategoryModal" aria-hidden="true" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 fw-bold">Rename category</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form id="editcategory" onkeydown="return event.key != 'Enter';">
+                    <div class="modal-body d-flex flex-column gap-4" id="editCatsFormItems">
+                        <div class="d-flex flex-column gap-2 align-items-start">
+                            <label for="category">Category:</label>
+                            <input class="form-control" type="text" name="category" aria-label="Category" autocomplete="off"/>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="editFormSubmit" onclick="submitEditCat(event, this)">Rename category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm delete modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5 fw-bold">Delete Category</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-start">
+                        Are you sure you want to delete this category?
+                    </div>
+                    <div class="text-start text-danger pt-2">
+                        All the transactions in this category will also be deleted.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="deleteFormSubmit" onclick="deleteCategory(this)" class="btn btn-danger">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const typeIncomeSelect = document.getElementById("type-income");
+        const typeExpenseSelect = document.getElementById("type-expense");
+
+        if (typeIncomeSelect && typeExpenseSelect) {
+            typeIncomeSelect.addEventListener('change', function() {
+            this.form.submit();
+            });
+            typeExpenseSelect.addEventListener('change', function() {
+            this.form.submit();
+            });
+        }
+
+        function showEditModal(category) {
+            const form = document.getElementById("editcategory");
+
+            form.elements["category"].value = category.name;
+
+            const editFormSubmit = document.getElementById("editFormSubmit");
+            editFormSubmit.value = category.id;
+        }
+
+        async function submitEditCat(event, element) {
+            event.preventDefault();
+
+            const formData = new FormData(document.getElementById("editcategory"));
+            formData.append("old_category", element.value)
+
+            let errorMsg = null;
+
+            try {
+                const response = await fetch("/editcategory", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    errorMsg = error.message;
+                }
+            } catch (err) {
+                errorMsg = `Server Error: ${err.message}`;
+            }
+
+            if (errorMsg) {
+                addTransFormItems = document.getElementById("editTransFormItems")
+                errorMsgDiv = document.createElement("div")
+                errorMsgDiv.className = "rounded bg-danger-subtle text-danger-emphasis text-start"
+                errorMsgDiv.style.padding = "5px"
+                errorMsgDiv.innerHTML = errorMsg
+                addTransFormItems.insertBefore(errorMsgDiv, addTransFormItems.firstChild)
+            }
+        }
+
+        function showDeleteModal(category) {
+            const editFormSubmit = document.getElementById("deleteFormSubmit");
+            deleteFormSubmit.value = category.id;
+        }
+
+        async function deleteCategory(element) {
+            const formData = new FormData();
+            formData.append("category", element.value)
+
+            const response = await fetch("/deletecategory", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                location.reload();
+            }
+        }
+    </script>
+{% endblock %}
