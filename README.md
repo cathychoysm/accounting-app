@@ -66,4 +66,4 @@ By default, the app will run on port 5000. You can access it in your web browser
 
 ## Demonstration
 
-<video src="./account-app-demo.mp4" width="1080" autoplay="false" controls></video>
+![](./accounting-app-demo.gif)
